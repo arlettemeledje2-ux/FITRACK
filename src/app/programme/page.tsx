@@ -33,9 +33,9 @@ export default function ProgrammePage() {
     if (nouveauNombre < 1 || nouveauNombre > 7 || nouveauNombre === joursParSemaine) return;
     if (nouveauNombre < joursParSemaine) {
       const joursSupprimes = jours.slice(nouveauNombre, joursParSemaine);
-      const contientDesChoix = joursSupprimes.some((jour) => jour.categories.length > 0 || jour.muscles.length > 0);
+      const contientDesChoix = joursSupprimes.some((jour) => jour.categories.length > 0 || jour.muscles.length > 0 || jour.exercices.length > 0);
       if (contientDesChoix && !window.confirm(`Réduire à ${nouveauNombre} jour${nouveauNombre > 1 ? "s" : ""} supprimera les choix des jours ${nouveauNombre + 1} à ${joursParSemaine}. Continuer ?`)) return;
-      setJours((actuels) => actuels.map((jour, index) => index < nouveauNombre ? jour : { categories: [], muscles: [] }));
+      setJours((actuels) => actuels.map((jour, index) => index < nouveauNombre ? jour : { categories: [], muscles: [], exercices: [] }));
     }
     setJoursParSemaine(nouveauNombre);
     setErreur("");
@@ -46,7 +46,7 @@ export default function ProgrammePage() {
       if (index !== indexJour) return jour;
       const categories = jour.categories.includes(categorie) ? jour.categories.filter((item) => item !== categorie) : [...jour.categories, categorie];
       const autorises = musclesPour(categories);
-      return { categories, muscles: jour.muscles.filter((muscle) => autorises.includes(muscle)) };
+      return { ...jour, categories, muscles: jour.muscles.filter((muscle) => autorises.includes(muscle)) };
     }));
     setErreur("");
   }
