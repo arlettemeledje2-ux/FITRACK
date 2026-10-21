@@ -12,13 +12,28 @@ function Logo() {
 
 function CarteSeance({ jour, index, label, initialementOuvert = false }: { jour: JourProgramme; index: number; label: string; initialementOuvert?: boolean }) {
   const [ouverte, setOuverte] = useState(initialementOuvert);
+  const [note, setNote] = useState("");
+  const [noteEditee, setNoteEditee] = useState("");
+  const [notesOuvertes, setNotesOuvertes] = useState(false);
   const muscles = jour.muscles;
+  const cleNotes = `fitrack-notes-seance-${index}`;
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setNote(window.localStorage.getItem(cleNotes) ?? ""));
+    return () => window.cancelAnimationFrame(frame);
+  }, [cleNotes]);
+  function enregistrerNote() {
+    const texte = noteEditee.trim();
+    if (texte) window.localStorage.setItem(cleNotes, texte);
+    else window.localStorage.removeItem(cleNotes);
+    setNote(texte);
+    setNotesOuvertes(false);
+  }
   const id = `details-seance-${label}-${index}`;
   return <article className={`dashboard-session${ouverte ? " dashboard-session-open" : ""}`}>
     <button type="button" className="dashboard-session-toggle" aria-expanded={ouverte} aria-controls={id} onClick={() => setOuverte(!ouverte)}>
       <span className="session-index">{String(index + 1).padStart(2, "0")}</span><span className="session-main"><strong>{label}</strong><span>{jour.categories.join(" + ")}</span></span><span className="session-chevron" aria-hidden="true">{ouverte ? "−" : "+"}</span>
     </button>
-    {ouverte && <div className="dashboard-session-details" id={id}><span>GROUPES MUSCULAIRES</span>{muscles.length ? <p>{muscles.join(" · ")}</p> : <p>Aucun groupe musculaire sélectionné</p>}</div>}
+    {ouverte && <div className="dashboard-session-details" id={id}><span>GROUPES MUSCULAIRES</span>{muscles.length ? <p>{muscles.join(" · ")}</p> : <p>Aucun groupe musculaire sélectionné</p>}{note && !notesOuvertes && <p className="goal-notes-preview">{note}</p>}<button type="button" className="session-notes-button" onClick={() => { setNoteEditee(note); setNotesOuvertes(true); }}>{note ? "Modifier les notes" : "Ajouter une note"}</button>{notesOuvertes && <div className="session-notes-editor"><label htmlFor={`notes-seance-${index}`}>Tes notes<textarea id={`notes-seance-${index}`} rows={4} maxLength={500} value={noteEditee} onChange={(event) => setNoteEditee(event.target.value)} placeholder="Écris une note pour cette séance…" /></label><div className="goal-modal-actions"><button type="button" className="goal-secondary-button" onClick={() => setNotesOuvertes(false)}>Annuler</button>{note && <button type="button" className="goal-secondary-button" onClick={() => { window.localStorage.removeItem(cleNotes); setNote(""); setNotesOuvertes(false); }}>Effacer</button>}<button type="button" className="primary-button" onClick={enregistrerNote}>Enregistrer</button></div></div>}</div>}
   </article>;
 }
 
