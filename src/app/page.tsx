@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const benefits = [
   { number: "01", title: "Planifier", detail: "Un programme qui te ressemble." },
@@ -7,12 +8,7 @@ const benefits = [
 ];
 
 function BrandMark() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 40 40" className="brand-mark">
-      <rect width="40" height="40" rx="14" fill="currentColor" />
-      <path d="M11 23.5 17.5 17l5 5L29 15.5M22.5 15.5H29V22" fill="none" stroke="#F8FAF9" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <Image src="/fitrack-logo.svg" alt="FITRACK" width={420} height={290} priority className="brand-logo" />;
 }
 
 export default function Home() {
