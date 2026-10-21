@@ -1,69 +1,73 @@
-import Image from "next/image";
+import Link from "next/link";
+
+const benefits = [
+  { number: "01", title: "Planifier", detail: "Un programme qui te ressemble." },
+  { number: "02", title: "S'entraîner", detail: "À ton rythme, chaque semaine." },
+  { number: "03", title: "Progresser", detail: "Chaque effort compte." },
+];
+
+function BrandMark() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 40 40" className="brand-mark">
+      <rect width="40" height="40" rx="14" fill="currentColor" />
+      <path d="M11 23.5 17.5 17l5 5L29 15.5M22.5 15.5H29V22" fill="none" stroke="#F8FAF9" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="home-shell">
+      <header className="topbar">
+        <Link href="/" className="brand" aria-label="FITRACK, accueil">
+          <BrandMark />
+          <span>FITRACK</span>
+        </Link>
+        <span className="topbar-note">TON ESPACE SPORTIF</span>
+      </header>
+
+      <section className="hero" aria-labelledby="hero-title">
+        <div className="hero-copy">
+          <p className="eyebrow"><span className="status-dot" /> TON PROCHAIN DÉPART</p>
+          <h1 id="hero-title">Chaque progrès commence <span>par un plan.</span></h1>
+          <p className="hero-description">Organise tes entraînements, fixe tes objectifs et suis tes progrès, à ton rythme.</p>
+          <Link href="/programme" className="primary-button">
+            Créer mon programme <span aria-hidden="true" className="button-arrow">↗</span>
+          </Link>
+          <p className="hero-footnote"><span aria-hidden="true">✳</span> Un premier pas, puis un autre.</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="visual-card" aria-label="Illustration de progression sportive">
+          <div className="visual-topline"><span>TON RYTHME. TES OBJECTIFS.</span><span className="visual-sparkle">✳</span></div>
+          <div className="orbit orbit-outer" /><div className="orbit orbit-inner" />
+          <div className="figure-ground" />
+          <svg className="runner" viewBox="0 0 300 300" role="img" aria-label="Silhouette stylisée d'une personne en mouvement">
+            <circle cx="192" cy="58" r="23" fill="#172B3A" />
+            <path d="M180 93c-17-5-31 4-39 19l-25 44 28 14 24-39 22 13 28 43 26-17-31-51c-6-10-18-20-33-26Z" fill="#50C9A7" />
+            <path d="m143 121-43-18-36 15 8 17 33-8 28 23 10-29Z" fill="#172B3A" />
+            <path d="m214 166 20 12 22 44-16 10-31-38-19-8 24-20Z" fill="#172B3A" />
+            <path d="m162 173 22 12-14 48-38 39-18-15 31-42 17-42Z" fill="#172B3A" />
+            <path d="m187 184 20 5 3 47 24 35-18 13-36-38-4-40 11-22Z" fill="#50C9A7" />
+            <path d="m115 260 18 13-5 9h-37c-4 0-5-5-2-8l26-14Zm99 13 18-13 23 19c4 3 2 8-3 8h-34l-4-14Z" fill="#172B3A" />
+          </svg>
+          <div className="floating-note"><span className="note-icon">↗</span><span><strong>Un pas à la fois</strong><small>Le progrès t&apos;appartient.</small></span></div>
+          <div className="visual-caption"><span>01 — EN MOUVEMENT</span><span>ALLER À TON RYTHME</span></div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="benefits" aria-label="Les étapes de ta progression">
+        <div className="benefits-heading"><span>LA MÉTHODE FITRACK</span><span>TOUT COMMENCE PAR TOI</span></div>
+        <div className="benefit-grid">
+          {benefits.map((benefit) => (
+            <article className="benefit" key={benefit.number}>
+              <span className="benefit-number">{benefit.number}</span>
+              <div><h2>{benefit.title}</h2><p>{benefit.detail}</p></div>
+              <span className="benefit-arrow" aria-hidden="true">↗</span>
+            </article>
+          ))}
+        </div>
+      </section>
+      <footer className="page-footer"><span>FITRACK © 2026</span><span>FAIT POUR AVANCER.</span></footer>
+    </main>
   );
 }
