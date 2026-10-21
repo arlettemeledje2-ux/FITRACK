@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { CATEGORIES, creerJours, lireProgramme, musclesPour, type Categorie, type Muscle, type Programme } from "@/lib/programme";
 
 function Logo() {
-  return <Link href="/" className="brand" aria-label="FITRACK, accueil"><Image src="/fitrack-mark.svg" alt="" width={270} height={250} className="brand-mark" /><span>FITRACK</span></Link>;
+  return <Link href="/" className="brand" aria-label="FITRACK, accueil"><Image src="/fitrack-logo.svg" alt="FITRACK" width={420} height={290} className="brand-logo" /></Link>;
 }
 
 export default function ProgrammePage() {
