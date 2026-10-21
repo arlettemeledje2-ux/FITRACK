@@ -3,7 +3,7 @@ export const UNITES_OBJECTIF = ["Répétitions", "Kilogrammes", "Minutes", "Kilo
 export type CategorieObjectif = (typeof CATEGORIES_OBJECTIF)[number];
 export type UniteObjectif = (typeof UNITES_OBJECTIF)[number];
 export type StatutObjectif = "a-venir" | "en-cours" | "atteint";
-export type Objectif = { id: string; titre: string; categorie: CategorieObjectif; dateDebut: string; actuelle: number; cible: number; unite: UniteObjectif; statut?: StatutObjectif };
+export type Objectif = { id: string; titre: string; categorie: CategorieObjectif; dateDebut: string; actuelle: number; cible: number; unite: UniteObjectif; notes?: string; statut?: StatutObjectif };
 export const CLE_OBJECTIFS = "fitrack-objectifs";
 
 export function calculerStatutObjectif(objectif: Pick<Objectif, "dateDebut" | "actuelle" | "cible">, aujourdHui = new Date()): StatutObjectif {
