@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
+import Navigation from "@/components/Navigation";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CATEGORIES_OBJECTIF, UNITES_OBJECTIF, enregistrerObjectifs, lireObjectifs, type Objectif } from "@/lib/objectifs";
@@ -63,7 +62,7 @@ export default function NouvelObjectifPage() {
     } catch { setErreur("Impossible d’enregistrer cet objectif sur cet appareil. Réessaie."); }
   }
 
-  return <main className="planner-shell dashboard-shell"><header className="topbar"><Link href="/" aria-label="FITRACK, accueil"><Image src="/fitrack-logo.svg" alt="FITRACK" width={420} height={290} className="brand-logo" /></Link><Link href="/objectifs" className="planner-header-link">MES OBJECTIFS <span aria-hidden="true">↗</span></Link></header>
+  return <main className="planner-shell dashboard-shell"><Navigation/>
     <section className="planner-intro dashboard-intro"><p className="eyebrow"><span className="status-dot"/> UN PAS APRÈS L’AUTRE</p><h1>{id ? "Mets à jour" : "Nouvel"} <span>objectif.</span></h1><p>Définis une cible mesurable et garde le cap.</p></section>
     <form className="goal-form" onSubmit={sauvegarder} noValidate>
       <label htmlFor="goal-title">Titre de l’objectif<input id="goal-title" required maxLength={100} value={titre} onChange={(event) => setTitre(event.target.value)} placeholder="Ex. Réussir 20 tractions" /></label>

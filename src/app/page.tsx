@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import Navigation from "@/components/Navigation";
 
 const benefits = [
   { number: "01", title: "Planifier", detail: "Un programme qui te ressemble." },
@@ -7,20 +7,10 @@ const benefits = [
   { number: "03", title: "Progresser", detail: "Chaque effort compte." },
 ];
 
-function BrandMark() {
-  return <Image src="/fitrack-logo.svg" alt="FITRACK" width={420} height={290} priority className="brand-logo" />;
-}
-
 export default function Home() {
   return (
     <main className="home-shell">
-      <header className="topbar">
-        <Link href="/" className="brand" aria-label="FITRACK, accueil">
-          <BrandMark />
-          <span>FITRACK</span>
-        </Link>
-        <span className="topbar-note">TON ESPACE SPORTIF</span>
-      </header>
+      <Navigation />
 
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-copy">

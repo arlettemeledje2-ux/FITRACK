@@ -1,14 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Navigation from "@/components/Navigation";
 import { CATEGORIES, JOURS_SEMAINE, creerJours, lireProgramme, musclesPour, type Categorie, type Muscle, type Programme } from "@/lib/programme";
-
-function Logo() {
-  return <Link href="/" className="brand" aria-label="FITRACK, accueil"><Image src="/fitrack-logo.svg" alt="FITRACK" width={420} height={290} className="brand-logo" /></Link>;
-}
 
 export default function ProgrammePage() {
   const router = useRouter();
@@ -89,7 +84,7 @@ export default function ProgrammePage() {
 
   return (
     <main className="planner-shell">
-      <header className="topbar"><Logo /><Link href="/mon-programme" className="planner-header-link">MON PROGRAMME <span aria-hidden="true">↗</span></Link></header>
+      <Navigation />
       <section className="planner-intro"><p className="eyebrow"><span className="status-dot"/> TON PLAN, À TA FAÇON</p><h1>Construis un programme <span>qui te ressemble.</span></h1><p>Choisis ton rythme, tes entraînements et les muscles que tu veux travailler.</p></section>
 
       <section className="planner-section days-section" aria-labelledby="days-title">

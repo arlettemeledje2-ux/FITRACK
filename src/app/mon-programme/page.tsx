@@ -1,14 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import Navigation from "@/components/Navigation";
 import { useEffect, useState } from "react";
 import { CLE_PROGRAMME, JOURS_SEMAINE, lireProgramme, type Programme, type JourProgramme, type Exercice } from "@/lib/programme";
 import { lireObjectifs, type Objectif } from "@/lib/objectifs";
-
-function Logo() {
-  return <Link href="/" className="brand" aria-label="FITRACK, accueil"><Image src="/fitrack-logo.svg" alt="FITRACK" width={420} height={290} className="brand-logo" /></Link>;
-}
 
 function CarteSeance({ jour, index, label, dateOccurrence, initialementOuvert = false }: { jour: JourProgramme; index: number; label: string; dateOccurrence?: string; initialementOuvert?: boolean }) {
   const [ouverte, setOuverte] = useState(initialementOuvert);
@@ -97,7 +93,6 @@ export default function MonProgrammePage() {
   const [programme, setProgramme] = useState<Programme | null>(null);
   const [objectifs, setObjectifs] = useState<Objectif[]>([]);
   const [pret, setPret] = useState(false);
-  const [menuOuvert, setMenuOuvert] = useState(false);
   const [maintenant, setMaintenant] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -127,7 +122,7 @@ export default function MonProgrammePage() {
 
   return (
     <main className="planner-shell dashboard-shell">
-      <header className="topbar"><Logo /><div className="dashboard-nav-wrap"><button type="button" className="dashboard-menu-button" aria-expanded={menuOuvert} aria-controls="dashboard-nav" onClick={() => setMenuOuvert(!menuOuvert)}><span>Navigation</span><span aria-hidden="true">{menuOuvert ? "×" : "☰"}</span></button><nav id="dashboard-nav" className={`dashboard-nav${menuOuvert ? " dashboard-nav-open" : ""}`} aria-label="Navigation principale"><Link href="/" onClick={() => setMenuOuvert(false)}>Accueil</Link><Link href="/mon-programme" aria-current="page" onClick={() => setMenuOuvert(false)}>Mon programme</Link><Link href="/objectifs/nouveau" onClick={() => setMenuOuvert(false)}>Nouvel objectif</Link><Link href="/objectifs" onClick={() => setMenuOuvert(false)}>Mes objectifs</Link></nav></div></header>
+      <Navigation />
       <section className="planner-intro dashboard-intro"><p className="eyebrow"><span className="status-dot"/> TON ESPACE PERSONNEL</p><h1>Mon <span>programme.</span></h1><p>Retrouve tes objectifs et organise tes prochaines séances.</p></section>
 
       {!pret ? <p className="saved-empty">Chargement de ton tableau de bord…</p> : <>
