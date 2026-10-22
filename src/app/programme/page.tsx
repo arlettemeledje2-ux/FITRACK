@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CATEGORIES, creerJours, lireProgramme, musclesPour, type Categorie, type Muscle, type Programme } from "@/lib/programme";
+import { CATEGORIES, JOURS_SEMAINE, creerJours, lireProgramme, musclesPour, type Categorie, type Muscle, type Programme } from "@/lib/programme";
 
 function Logo() {
   return <Link href="/" className="brand" aria-label="FITRACK, accueil"><Image src="/fitrack-logo.svg" alt="FITRACK" width={420} height={290} className="brand-logo" /></Link>;
@@ -41,6 +41,17 @@ export default function ProgrammePage() {
     setErreur("");
   }
 
+  function modifierJourSemaine(indexJour: number, valeur: string) {
+    if (valeur && jours.some((jour, index) => index !== indexJour && jour.jourSemaine === valeur)) {
+      setErreur("Chaque séance doit avoir un jour différent.");
+      return;
+    }
+    setJours((actuels) => actuels.map((jour, index) => index === indexJour ? { ...jour, jourSemaine: valeur ? valorJour(valeur) : undefined } : jour));
+    setErreur("");
+  }
+
+  function valorJour(valeur: string) { return valeur as (typeof JOURS_SEMAINE)[number]; }
+
   function modifierCategorie(indexJour: number, categorie: Categorie) {
     setJours((actuels) => actuels.map((jour, index) => {
       if (index !== indexJour) return jour;
@@ -65,6 +76,8 @@ export default function ProgrammePage() {
       document.getElementById(`jour-${jourIncomplet + 1}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+    const jourDuplique = jours.slice(0, joursParSemaine).findIndex((jour, index, liste) => Boolean(jour.jourSemaine && liste.some((autre, autreIndex) => autreIndex !== index && autre.jourSemaine === jour.jourSemaine)));
+    if (jourDuplique !== -1) { setErreur("Chaque séance doit avoir un jour différent."); return; }
     const programme: Programme = { joursParSemaine, jours, modifieLe: new Date().toISOString() };
     try {
       window.localStorage.setItem("fitrack-programme", JSON.stringify(programme));
@@ -99,6 +112,7 @@ export default function ProgrammePage() {
           const musclesDisponibles = musclesPour(jour.categories);
           return <article id={`jour-${index + 1}`} className={`training-card${actif ? "" : " training-card-disabled"}`} key={index}>
             <div className="training-card-heading"><h3>Jour {index + 1}</h3><span>{actif ? String(index + 1).padStart(2, "0") : "REPOS"}</span></div>
+            {actif && <div className="session-schedule-fields"><label>Jour de la semaine<select value={jour.jourSemaine ?? ""} onChange={(event) => modifierJourSemaine(index, event.target.value)}><option value="">Non défini</option>{JOURS_SEMAINE.map((nom) => <option key={nom} value={nom} disabled={jours.some((autre, autreIndex) => autreIndex !== index && autre.jourSemaine === nom)}>{nom[0].toUpperCase() + nom.slice(1)}</option>)}</select></label><label>Date précise <span className="goal-optional">facultative</span><input type="date" value={jour.date ?? ""} onChange={(event) => setJours((actuels) => actuels.map((item, position) => position === index ? { ...item, date: event.target.value || undefined } : item))}/></label></div>}
             <fieldset disabled={!actif} className="check-list"><legend className="sr-only">Types d’entraînement du jour {index + 1}</legend>{CATEGORIES.map((categorie) => <label className="check-row" key={categorie}><input type="checkbox" checked={actif && jour.categories.includes(categorie)} onChange={() => modifierCategorie(index, categorie)}/><span className="custom-check" aria-hidden="true"/><span>{categorie}</span></label>)}</fieldset>
             {actif && musclesDisponibles.length > 0 && <div className="muscle-area"><p className="muscle-title">MUSCLES TRAVAILLÉS</p><fieldset className="muscle-list"><legend className="sr-only">Muscles travaillés le jour {index + 1}</legend>{musclesDisponibles.map((muscle) => <label className="muscle-chip" key={muscle}><input type="checkbox" checked={jour.muscles.includes(muscle)} onChange={() => modifierMuscle(index, muscle)}/><span>{muscle}</span></label>)}</fieldset></div>}
           </article>;
