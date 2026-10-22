@@ -14,7 +14,7 @@
 .section-description { margin: 9px 0 20px; color: #7b8781; font-size: 12px; line-height: 1.7; }
 .day-stepper { display: flex; width: min(320px, 100%); align-items: center; justify-content: space-between; margin: 24px auto 12px; padding: 8px; border: 1px solid var(--line); border-radius: 19px; background: #fff; }
 .stepper-button { width: 48px; height: 48px; border: 0; border-radius: 14px; background: #edf6f2; color: #238d6d; font-size: 28px; line-height: 1; cursor: pointer; transition: background .15s, transform .15s; }
-.stepper-button:hover:not(:disabled) { background: #d9f1e7; transform: scale(1.04); }.stepper-button:disabled { color: #bdc9c2; background: #f3f5f4; cursor: not-allowed; }
+.stepper-button:hover { background: #d9f1e7; transform: scale(1.04); }
 .stepper-value { display: flex; align-items: center; gap: 12px; }.stepper-value strong { font-size: 35px; font-weight: 600; letter-spacing: -.06em; }.stepper-value span { color: #75847c; font-size: 9px; font-weight: 750; letter-spacing: .1em; }
 .week-dots { display: flex; justify-content: center; gap: 7px; }.week-dot { width: 7px; height: 7px; border-radius: 50%; background: #dfe7e2; }.week-dot-active { background: var(--mint); }
 .training-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-top: 22px; }

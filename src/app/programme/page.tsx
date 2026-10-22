@@ -11,6 +11,8 @@ export default function ProgrammePage() {
   const [jours, setJours] = useState(() => creerJours());
   const [pret, setPret] = useState(false);
   const [erreur, setErreur] = useState("");
+  const [notification, setNotification] = useState<{ message: string; joursPrecedents: number; joursSauves: typeof jours } | null>(null);
+  const notificationTimer = useState<{ current: ReturnType<typeof setTimeout> | null }>({ current: null })[0];
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -25,15 +27,25 @@ export default function ProgrammePage() {
   }, []);
 
   function changerNombre(nouveauNombre: number) {
-    if (nouveauNombre < 1 || nouveauNombre > 7 || nouveauNombre === joursParSemaine) return;
-    if (nouveauNombre < joursParSemaine) {
-      const joursSupprimes = jours.slice(nouveauNombre, joursParSemaine);
-      const contientDesChoix = joursSupprimes.some((jour) => jour.categories.length > 0 || jour.muscles.length > 0 || jour.exercices.length > 0);
-      if (contientDesChoix && !window.confirm(`Réduire à ${nouveauNombre} jour${nouveauNombre > 1 ? "s" : ""} supprimera les choix des jours ${nouveauNombre + 1} à ${joursParSemaine}. Continuer ?`)) return;
-      setJours((actuels) => actuels.map((jour, index) => index < nouveauNombre ? jour : { categories: [], muscles: [], exercices: [] }));
-    }
-    setJoursParSemaine(nouveauNombre);
+    const cible = (nouveauNombre + 6) % 7 + 1;
+    if (cible === joursParSemaine) return;
+    if (notificationTimer.current) clearTimeout(notificationTimer.current);
+    if (cible < joursParSemaine) {
+      const joursSauves = jours.slice(cible, joursParSemaine);
+      const contientDesChoix = joursSauves.some((jour) => jour.categories.length || jour.muscles.length || jour.exercices.length || jour.jourSemaine || jour.date);
+      setNotification(contientDesChoix ? { message: "Séances mises en repos", joursPrecedents: joursParSemaine, joursSauves } : null);
+      if (contientDesChoix) notificationTimer.current = setTimeout(() => setNotification(null), 6000);
+    } else setNotification(null);
+    setJoursParSemaine(cible);
     setErreur("");
+  }
+
+  function annulerReduction() {
+    if (!notification) return;
+    if (notificationTimer.current) clearTimeout(notificationTimer.current);
+    setJours((actuels) => actuels.map((jour, index) => index >= joursParSemaine && index < notification.joursPrecedents ? notification.joursSauves[index - joursParSemaine] : jour));
+    setJoursParSemaine(notification.joursPrecedents);
+    setNotification(null);
   }
 
   function modifierJourSemaine(indexJour: number, valeur: string) {
@@ -73,7 +85,8 @@ export default function ProgrammePage() {
     }
     const jourDuplique = jours.slice(0, joursParSemaine).findIndex((jour, index, liste) => Boolean(jour.jourSemaine && liste.some((autre, autreIndex) => autreIndex !== index && autre.jourSemaine === jour.jourSemaine)));
     if (jourDuplique !== -1) { setErreur("Chaque séance doit avoir un jour différent."); return; }
-    const programme: Programme = { joursParSemaine, jours, modifieLe: new Date().toISOString() };
+    const joursEnregistres = jours.map((jour, index) => index < joursParSemaine ? jour : { categories: [], muscles: [], exercices: [] });
+    const programme: Programme = { joursParSemaine, jours: joursEnregistres, modifieLe: new Date().toISOString() };
     try {
       window.localStorage.setItem("fitrack-programme", JSON.stringify(programme));
       router.push("/mon-programme");
@@ -91,9 +104,9 @@ export default function ProgrammePage() {
         <div className="section-kicker"><span>01</span><span>TON RYTHME</span></div>
         <h2 id="days-title">Combien de jours souhaites-tu t’entraîner par semaine ?</h2>
         <div className="day-stepper" aria-label="Nombre de jours d'entraînement par semaine">
-          <button type="button" className="stepper-button" aria-label="Diminuer le nombre de jours" disabled={joursParSemaine <= 1} onClick={() => changerNombre(joursParSemaine - 1)}>‹</button>
+          <button type="button" className="stepper-button" aria-label="Diminuer le nombre de jours" onClick={() => changerNombre(joursParSemaine - 1)}>‹</button>
           <div className="stepper-value"><strong>{joursParSemaine}</strong><span>JOUR{joursParSemaine > 1 ? "S" : ""} / SEMAINE</span></div>
-          <button type="button" className="stepper-button" aria-label="Augmenter le nombre de jours" disabled={joursParSemaine >= 7} onClick={() => changerNombre(joursParSemaine + 1)}>›</button>
+          <button type="button" className="stepper-button" aria-label="Augmenter le nombre de jours" onClick={() => changerNombre(joursParSemaine + 1)}>›</button>
         </div>
         <div className="week-dots" aria-hidden="true">{Array.from({ length: 7 }, (_, index) => <span key={index} className={index < joursParSemaine ? "week-dot week-dot-active" : "week-dot"}/>)}</div>
       </section>
@@ -119,6 +132,7 @@ export default function ProgrammePage() {
         <h2 id="save-title">Prêt à passer à l’action ?</h2>
         <p className="section-description">Tes choix restent enregistrés sur cet appareil. Tu pourras les modifier à tout moment.</p>
         {erreur && <p className="form-error" role="alert">{erreur}</p>}
+        {notification && <div className="fitrack-toast" role="status"><span>{notification.message}</span><button type="button" onClick={annulerReduction}>Annuler</button></div>}
         <button type="button" className="primary-button save-button" onClick={enregistrer} disabled={!pret}>Enregistrer mon programme <span aria-hidden="true" className="button-arrow">↗</span></button>
       </section>
       <footer className="page-footer"><span>FITRACK © 2026</span><span>FAIT POUR AVANCER.</span></footer>
