@@ -3,7 +3,9 @@
 import Navigation from "@/components/Navigation";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CATEGORIES_OBJECTIF, UNITES_OBJECTIF, enregistrerObjectifs, lireObjectifs, type Objectif } from "@/lib/objectifs";
+import { CATEGORIES_OBJECTIF, UNITES_OBJECTIF, type Objectif } from "@/lib/objectifs";
+import { lireDonnees, modifierDonnees } from "@/lib/firebase/donnees";
+import { messageFirebase } from "@/lib/firebase/erreurs";
 
 function dateLocale(dateISO: string) {
   if (!dateISO) return "";
@@ -13,7 +15,6 @@ function dateLocale(dateISO: string) {
 
 export default function NouvelObjectifPage() {
   const router = useRouter();
-  const [objectifs, setObjectifs] = useState<Objectif[]>([]);
   const [id, setId] = useState<string | null>(null);
   const [titre, setTitre] = useState("");
   const [categorie, setCategorie] = useState<(typeof CATEGORIES_OBJECTIF)[number]>("Haut du corps");
@@ -25,9 +26,9 @@ export default function NouvelObjectifPage() {
   const [confirmation, setConfirmation] = useState(false);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const liste = lireObjectifs();
-      setObjectifs(liste);
+    let actif = true;
+    lireDonnees().then(({ objectifs: liste = [] }) => {
+      if (!actif) return;
       const editId = new URLSearchParams(window.location.search).get("id");
       setId(editId);
       const objectif = liste.find((item) => item.id === editId);
@@ -41,11 +42,11 @@ export default function NouvelObjectifPage() {
       } else {
         setDateDebut(new Date().toLocaleDateString("sv-SE"));
       }
-    });
-    return () => window.cancelAnimationFrame(frame);
+    }).catch((cause) => { if (actif) setErreur(messageFirebase(cause)); });
+    return () => { actif = false; };
   }, []);
 
-  function sauvegarder(event: React.FormEvent<HTMLFormElement>) {
+  async function sauvegarder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErreur("");
     const valeurActuelle = actuelle.trim() === "" ? 0 : Number(actuelle);
@@ -56,10 +57,10 @@ export default function NouvelObjectifPage() {
     if (!Number.isFinite(valeurActuelle) || valeurActuelle < 0) { setErreur("Le niveau actuel doit être un nombre positif ou égal à zéro."); return; }
     const objectif: Objectif = { id: id ?? (globalThis.crypto?.randomUUID?.() ?? String(Date.now())), titre: titre.trim(), categorie, dateDebut, actuelle: valeurActuelle, cible: valeurCible, unite };
     try {
-      enregistrerObjectifs([...objectifs.filter((item) => item.id !== objectif.id), objectif]);
+      await modifierDonnees((data) => ({ ...data, objectifs: [...(data.objectifs ?? []).filter((item) => item.id !== objectif.id), objectif] }));
       setConfirmation(true);
       window.setTimeout(() => router.push("/objectifs"), 900);
-    } catch { setErreur("Impossible d’enregistrer cet objectif sur cet appareil. Réessaie."); }
+    } catch (cause) { setErreur(messageFirebase(cause)); }
   }
 
   return <main className="planner-shell dashboard-shell"><Navigation/>

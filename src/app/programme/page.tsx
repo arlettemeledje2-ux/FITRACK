@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Navigation from "@/components/Navigation";
-import { CATEGORIES, JOURS_SEMAINE, creerJours, lireProgramme, musclesPour, type Categorie, type Muscle, type Programme } from "@/lib/programme";
+import { CATEGORIES, JOURS_SEMAINE, creerJours, musclesPour, type Categorie, type Muscle, type Programme } from "@/lib/programme";
+import { lireDonnees, modifierDonnees } from "@/lib/firebase/donnees";
+import { messageFirebase } from "@/lib/firebase/erreurs";
 
 export default function ProgrammePage() {
   const router = useRouter();
@@ -12,18 +14,16 @@ export default function ProgrammePage() {
   const [pret, setPret] = useState(false);
   const [erreur, setErreur] = useState("");
   const [notification, setNotification] = useState<{ message: string; joursPrecedents: number; joursSauves: typeof jours } | null>(null);
-  const notificationTimer = useState<{ current: ReturnType<typeof setTimeout> | null }>({ current: null })[0];
+  const notificationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const saved = lireProgramme();
-      if (saved) {
-        setJoursParSemaine(saved.joursParSemaine);
-        setJours(saved.jours);
-      }
+    let actif = true;
+    lireDonnees().then(({ programme: saved }) => {
+      if (!actif) return;
+      if (saved) { setJoursParSemaine(saved.joursParSemaine); setJours(saved.jours); }
       setPret(true);
-    });
-    return () => window.cancelAnimationFrame(frame);
+    }).catch((cause) => { if (actif) setErreur(messageFirebase(cause)); });
+    return () => { actif = false; };
   }, []);
 
   function changerNombre(nouveauNombre: number) {
@@ -76,7 +76,7 @@ export default function ProgrammePage() {
     })));
   }
 
-  function enregistrer() {
+  async function enregistrer() {
     const jourIncomplet = jours.slice(0, joursParSemaine).findIndex((jour) => jour.categories.length === 0);
     if (jourIncomplet !== -1) {
       setErreur(`Choisis au moins un type d’entraînement pour le Jour ${jourIncomplet + 1}.`);
@@ -88,10 +88,10 @@ export default function ProgrammePage() {
     const joursEnregistres = jours.map((jour, index) => index < joursParSemaine ? jour : { categories: [], muscles: [], exercices: [] });
     const programme: Programme = { joursParSemaine, jours: joursEnregistres, modifieLe: new Date().toISOString() };
     try {
-      window.localStorage.setItem("fitrack-programme", JSON.stringify(programme));
+      await modifierDonnees((data) => ({ ...data, programme }));
       router.push("/mon-programme");
-    } catch {
-      setErreur("Impossible d’enregistrer sur cet appareil. Vérifie l’espace disponible dans ton navigateur.");
+    } catch (cause) {
+      setErreur(messageFirebase(cause));
     }
   }
 
@@ -130,7 +130,7 @@ export default function ProgrammePage() {
       <section className="planner-section save-section" aria-labelledby="save-title">
         <div className="section-kicker"><span>03</span><span>TON PROGRAMME</span></div>
         <h2 id="save-title">Prêt à passer à l’action ?</h2>
-        <p className="section-description">Tes choix restent enregistrés sur cet appareil. Tu pourras les modifier à tout moment.</p>
+        <p className="section-description">Tes choix sont sauvegardés dans ton compte si tu es connecté, sinon sur cet appareil.</p>
         {erreur && <p className="form-error" role="alert">{erreur}</p>}
         {notification && <div className="fitrack-toast" role="status"><span>{notification.message}</span><button type="button" onClick={annulerReduction}>Annuler</button></div>}
         <button type="button" className="primary-button save-button" onClick={enregistrer} disabled={!pret}>Enregistrer mon programme <span aria-hidden="true" className="button-arrow">↗</span></button>

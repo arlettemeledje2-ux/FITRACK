@@ -4,7 +4,10 @@ import Link from "next/link";
 import Navigation from "@/components/Navigation";
 import { useEffect, useRef, useState } from "react";
 import Toast from "@/components/Toast";
-import { calculerStatutObjectif, lireObjectifs, enregistrerObjectifs, CATEGORIES_OBJECTIF, type Objectif } from "@/lib/objectifs";
+import { calculerStatutObjectif, CATEGORIES_OBJECTIF, type Objectif } from "@/lib/objectifs";
+import { lireDonnees, modifierDonnees, utilisateurPret } from "@/lib/firebase/donnees";
+import { messageFirebase } from "@/lib/firebase/erreurs";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 
 const CLE_SUPPRESSION = "fitrack-suppression-objectif";
 const DELAI_SUPPRESSION = 6000;
@@ -20,51 +23,65 @@ export default function ObjectifsPage() {
   const [selection, setSelection] = useState<Objectif | null>(null);
   const [notesCible, setNotesCible] = useState<Objectif | null>(null);
   const [message, setMessage] = useState("");
-  const [suppression, setSuppression] = useState<{ objectif: Objectif; echeance: number } | null>(null);
+  const [suppression, setSuppression] = useState<{ objectif: Objectif; echeance: number; uid: string | null } | null>(null);
   const timerSuppression = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      let list = lireObjectifs();
-      try {
-        const pending = sessionStorage.getItem(CLE_SUPPRESSION);
-        if (pending) {
-          const data = JSON.parse(pending) as { objectif: Objectif; echeance: number };
+    let actif = true;
+    Promise.all([lireDonnees(), utilisateurPret()]).then(([{ objectifs: list = [] }, user]) => {
+      if (!actif) return;
+      const pending = sessionStorage.getItem(CLE_SUPPRESSION);
+      if (pending) {
+        try {
+          const data = JSON.parse(pending) as { objectif: Objectif; echeance: number; uid: string | null };
+          if (data.uid !== (user?.uid ?? null)) { sessionStorage.removeItem(CLE_SUPPRESSION); return setObjectifs(list); }
           if (data.echeance > Date.now()) { list = list.filter((item) => item.id !== data.objectif.id); setSuppression(data); }
-          else { list = list.filter((item) => item.id !== data.objectif.id); enregistrerObjectifs(list); sessionStorage.removeItem(CLE_SUPPRESSION); }
-        }
-      } catch { sessionStorage.removeItem(CLE_SUPPRESSION); }
+          else {
+            list = list.filter((item) => item.id !== data.objectif.id);
+            void modifierDonnees((d) => ({ ...d, objectifs: (d.objectifs ?? []).filter((item) => item.id !== data.objectif.id) }))
+              .then(() => sessionStorage.removeItem(CLE_SUPPRESSION))
+              .catch((cause) => { setMessage(messageFirebase(cause)); setObjectifs((items) => [...items, data.objectif]); });
+          }
+        } catch { sessionStorage.removeItem(CLE_SUPPRESSION); }
+      }
       setObjectifs(list);
-    });
-    return () => window.cancelAnimationFrame(frame);
+    }).catch((cause) => { if (actif) setMessage(messageFirebase(cause)); });
+    return () => { actif = false; };
   }, []);
   useEffect(() => {
     if (!suppression) return;
-    const timer = setTimeout(() => {
-      const latest = lireObjectifs().filter((item) => item.id !== suppression.objectif.id);
-      enregistrerObjectifs(latest);
-      if (sessionStorage.getItem(CLE_SUPPRESSION) === JSON.stringify(suppression)) sessionStorage.removeItem(CLE_SUPPRESSION);
-      setObjectifs(latest);
-      setSuppression(null);
+    const timer = setTimeout(async () => {
+      try {
+        const user = await utilisateurPret();
+        if ((user?.uid ?? null) !== suppression.uid) { setSuppression(null); return; }
+        const data = await modifierDonnees((d) => ({ ...d, objectifs: (d.objectifs ?? []).filter((item) => item.id !== suppression.objectif.id) }));
+        setObjectifs(data.objectifs ?? []);
+        sessionStorage.removeItem(CLE_SUPPRESSION);
+        setSuppression(null);
+      } catch (cause) { setMessage(messageFirebase(cause)); setObjectifs((items) => [...items, suppression.objectif]); setSuppression(null); }
     }, Math.max(0, suppression.echeance - Date.now()));
     timerSuppression.current = timer;
     return () => clearTimeout(timer);
   }, [suppression]);
   const groupes = [{ key: "en-cours", titre: "Objectifs en cours", vide: "Aucun objectif en cours" }, { key: "a-venir", titre: "Objectifs à venir", vide: "Aucun objectif à venir" }, { key: "atteint", titre: "Objectifs atteints", vide: "Aucun objectif atteint" }] as const;
-  function sauvegarder(champs: Objectif) { const liste = objectifs.map((item) => item.id === champs.id ? { ...champs, statut: calculerStatutObjectif(champs) } : item); enregistrerObjectifs(liste); setObjectifs(lireObjectifs()); setSelection(null); setNotesCible(null); setMessage("Modifications enregistrées."); window.setTimeout(() => setMessage(""), 2500); }
+  async function sauvegarder(champs: Objectif) {
+    try {
+      const data = await modifierDonnees((d) => ({ ...d, objectifs: (d.objectifs ?? []).map((item) => item.id === champs.id ? { ...champs, statut: calculerStatutObjectif(champs) } : item) }));
+      setObjectifs(data.objectifs ?? []); setSelection(null); setNotesCible(null); setMessage("Modifications enregistrées."); window.setTimeout(() => setMessage(""), 2500);
+    } catch (cause) { setMessage(messageFirebase(cause)); }
+  }
   function supprimer(objectif: Objectif) {
     if (timerSuppression.current) clearTimeout(timerSuppression.current);
-    const entree = { objectif, echeance: Date.now() + DELAI_SUPPRESSION };
+    // Calculé uniquement lors du clic, jamais pendant le rendu.
+    // eslint-disable-next-line react-hooks/purity
+    const entree = { objectif, echeance: Date.now() + DELAI_SUPPRESSION, uid: getFirebaseAuth().currentUser?.uid ?? null };
     sessionStorage.setItem(CLE_SUPPRESSION, JSON.stringify(entree));
     setObjectifs((items) => items.filter((item) => item.id !== objectif.id));
     setSuppression(entree);
   }
   function annulerSuppression() {
-    if (!suppression || suppression.echeance <= Date.now()) return;
+    if (!suppression) return;
     if (timerSuppression.current) clearTimeout(timerSuppression.current);
-    const latest = lireObjectifs();
-    if (!latest.some((item) => item.id === suppression.objectif.id)) latest.push(suppression.objectif);
-    enregistrerObjectifs(latest);
-    setObjectifs(latest);
+    setObjectifs((items) => [...items, suppression.objectif]);
     sessionStorage.removeItem(CLE_SUPPRESSION);
     setSuppression(null);
   }

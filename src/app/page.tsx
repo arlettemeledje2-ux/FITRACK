@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Navigation from "@/components/Navigation";
+import LienCompte from "@/components/LienCompte";
 
 const benefits = [
   { number: "01", title: "Planifier", detail: "Un programme qui te ressemble." },
@@ -14,6 +15,7 @@ export default function Home() {
 
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-copy">
+          <LienCompte/>
           <p className="eyebrow"><span className="status-dot" /> TON PROCHAIN DÉPART</p>
           <h1 id="hero-title">Chaque progrès commence <span>par un plan.</span></h1>
           <p className="hero-description">Organise tes entraînements, fixe tes objectifs et suis tes progrès, à ton rythme.</p>

@@ -1,0 +1,12 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Chaque compte ne peut lire et écrire que ses propres documents connus.
+    match /users/{userId}/private/{documentId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == userId
+        && documentId in ['profile', 'data'];
+    }
+    // Tous les autres chemins restent interdits par défaut.
+  }
+}
